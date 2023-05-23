@@ -18,6 +18,7 @@ public:
 	glm::vec2 pos;
 	glm::vec2 vel;
 	glm::vec2 acc;
+	glm::vec2 vel_input;
 	SDL_Color color;
 	Entity(SDL_Color color_) {
 		this->color = color_;
@@ -39,9 +40,9 @@ void drawEtt(Entity const* ett, SDL_FRect drawPos) {
 	SDL_RenderFillRectF(g_renderer, &drawPos);
 }
 
-void physics(Entity* ett, float deltaTime) {
+void physics(Entity* ett, float deltaTime, glm::vec2 const& vel_input) {
 	ett->vel += deltaTime * ett->acc;
-	ett->pos += deltaTime * ett->vel;
+	ett->pos += deltaTime * (ett->vel + vel_input);
 }
 
 void printEtt(Entity const* ett) {
@@ -64,19 +65,40 @@ int main(int argc, char const* argv[]) {
 	bool run = true;
 	while (run) {
 		SDL_Event event;
+		/* Speed modifier via inputs */
+		glm::vec2 vel_modif = {0., 0.};
 		while (SDL_PollEvent(&event)) {
 			switch (event.type) {
 				case SDL_QUIT:
 					run = false;
-				break;
+					break;
 				case SDL_KEYDOWN:
 					switch (event.key.keysym.sym) {
 						case SDLK_ESCAPE:
 							run = false;
-						break;
+							break;
+						case SDLK_LEFT:
+						case SDLK_a:
+							printf("left ");
+							vel_modif.x -= 500;
+							break;
+						case SDLK_RIGHT:
+						case SDLK_d:
+							printf("right ");
+							vel_modif.x += 500;
+							break;
+						case SDLK_UP:
+						case SDLK_w:
+							printf("up ");
+							vel_modif.y -= 500;
+							break;
+						case SDLK_DOWN:
+						case SDLK_s:
+							printf("down ");
+							vel_modif.y += 500;
+							break;
 					}
-				break;
-
+					break;
 			default:
 				break;
 			}
@@ -84,8 +106,7 @@ int main(int argc, char const* argv[]) {
 		SDL_Color bg_color = {89, 189, 239, 255};
 		SDL_SetRenderDrawColor(g_renderer, bg_color.r, bg_color.g, bg_color.b, bg_color.a);
 		SDL_RenderClear(g_renderer);
-
-		physics(&ett1, 0.007);
+		physics(&ett1, 0.007, vel_modif);
 		SDL_FRect rect1 = {ett1.pos.x, ett1.pos.y, 50., 50.};
 		drawEtt(&ett1, rect1);
 		SDL_RenderPresent(g_renderer);
